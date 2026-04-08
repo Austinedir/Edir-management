@@ -1,0 +1,58 @@
+{% extends "base/base.html" %}
+{% block title %}Mass Messages{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h4 class="mb-0" style="font-family:'Playfair Display',serif;">
+      <i class="bi bi-broadcast me-2" style="color:var(--edir-green);"></i>Mass Communications
+    </h4>
+    <a href="/admin-portal/mass-messages/new/" class="btn" style="background:var(--edir-green);color:#fff;">
+      <i class="bi bi-plus-lg me-1"></i>New Mass Message
+    </a>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead style="background:#f8fbf9;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:#555;">
+          <tr>
+            <th class="ps-4">Subject</th>
+            <th>Channel</th>
+            <th>Recipients</th>
+            <th>Sent By</th>
+            <th>Date</th>
+            <th class="pe-4 text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for msg in messages_list %}
+        <tr>
+          <td class="ps-4">
+            <div class="fw-600" style="font-size:.9rem;">{{ msg.subject }}</div>
+            <div class="text-muted small">{{ msg.body|truncatechars:60 }}</div>
+          </td>
+          <td>
+            <span class="badge"
+              style="background:{% if msg.channel == 'email' %}#0d6efd{% elif msg.channel == 'sms' %}#6f42c1{% else %}var(--edir-green){% endif %};">
+              {{ msg.get_channel_display }}
+            </span>
+          </td>
+          <td style="font-size:.88rem;">{{ msg.recipients_count }} recipients</td>
+          <td style="font-size:.88rem;">{{ msg.sent_by.get_full_name|default:msg.sent_by.username|default:"—" }}</td>
+          <td style="font-size:.85rem;">{{ msg.created_at|date:"M d, Y" }}</td>
+          <td class="pe-4 text-center">
+            <span class="badge"
+              style="background:{% if msg.status == 'sent' %}var(--edir-green){% elif msg.status == 'failed' %}var(--edir-red){% elif msg.status == 'draft' %}#6c757d{% else %}var(--edir-gold){% endif %};">
+              {{ msg.get_status_display }}
+            </span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center py-5 text-muted">No mass messages sent yet.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

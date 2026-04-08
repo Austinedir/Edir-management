@@ -1,0 +1,16 @@
+from django.contrib import admin
+from .models import Notification, Announcement
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ['title', 'member', 'notification_type', 'channel', 'is_read', 'created_at']
+    list_filter = ['notification_type', 'channel', 'is_read']
+    search_fields = ['title', 'member__first_name', 'member__last_name']
+
+
+@admin.register(Announcement)
+class AnnouncementAdmin(admin.ModelAdmin):
+    list_display = ['title', 'edir', 'is_published', 'published_at', 'created_by']
+    list_filter = ['edir', 'is_published']
+    list_editable = ['is_published']

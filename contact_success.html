@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ edir.name|default:"EDIR" }}{% endblock %}</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --edir-green:   #1a6b3a;
+      --edir-gold:    #c8943a;
+      --edir-red:     #9b2335;
+      --edir-cream:   #fdf8f0;
+      --edir-dark:    #12221a;
+      --edir-muted:   #6b7c6e;
+      --sidebar-w:    260px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--edir-cream);
+      color: var(--edir-dark);
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-w); height: 100vh;
+      background: var(--edir-dark);
+      display: flex; flex-direction: column;
+      z-index: 1000;
+      transition: transform .25s ease;
+    }
+
+    .sidebar-brand {
+      padding: 1.5rem 1.25rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-brand h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      color: var(--edir-gold);
+      margin: 0;
+      line-height: 1.2;
+    }
+    .sidebar-brand small {
+      color: rgba(255,255,255,.4);
+      font-size: .72rem;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: .75rem 0; }
+
+    .nav-section {
+      padding: .5rem 1rem .25rem;
+      font-size: .65rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.28);
+      font-weight: 600;
+    }
+
+    .sidebar-link {
+      display: flex; align-items: center; gap: .65rem;
+      padding: .55rem 1.25rem;
+      color: rgba(255,255,255,.65);
+      text-decoration: none;
+      font-size: .88rem;
+      font-weight: 400;
+      border-radius: 0;
+      transition: background .15s, color .15s;
+      position: relative;
+    }
+    .sidebar-link:hover {
+      background: rgba(255,255,255,.06);
+      color: #fff;
+    }
+    .sidebar-link.active {
+      background: rgba(200,148,58,.12);
+      color: var(--edir-gold);
+      font-weight: 600;
+    }
+    .sidebar-link.active::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--edir-gold);
+      border-radius: 0 2px 2px 0;
+    }
+    .sidebar-link .bi { font-size: 1rem; flex-shrink: 0; }
+
+    .sidebar-footer {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid rgba(255,255,255,.08);
+      font-size: .8rem;
+      color: rgba(255,255,255,.4);
+    }
+
+    /* ── Main ── */
+    #main {
+      margin-left: var(--sidebar-w);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── Topbar ── */
+    #topbar {
+      background: #fff;
+      border-bottom: 1px solid #e8ede9;
+      padding: .75rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 900;
+    }
+
+    .topbar-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      color: var(--edir-dark);
+      font-weight: 600;
+    }
+
+    .topbar-actions { display: flex; align-items: center; gap: .75rem; }
+
+    .notif-btn {
+      position: relative;
+      background: none; border: none;
+      color: var(--edir-muted);
+      font-size: 1.2rem;
+      padding: .3rem .45rem;
+      border-radius: .4rem;
+      transition: background .15s, color .15s;
+    }
+    .notif-btn:hover { background: var(--edir-cream); color: var(--edir-dark); }
+    .notif-badge {
+      position: absolute; top: 2px; right: 2px;
+      background: var(--edir-red);
+      color: #fff; font-size: .55rem;
+      padding: 1px 4px; border-radius: 10px;
+      font-weight: 700; line-height: 1.4;
+    }
+
+    .user-pill {
+      display: flex; align-items: center; gap: .5rem;
+      background: var(--edir-cream);
+      border: 1px solid #dde6df;
+      border-radius: 2rem;
+      padding: .3rem .75rem .3rem .4rem;
+      font-size: .82rem; font-weight: 500;
+      color: var(--edir-dark);
+      text-decoration: none;
+      transition: border-color .15s;
+    }
+    .user-pill:hover { border-color: var(--edir-green); color: var(--edir-dark); }
+    .user-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--edir-green);
+      color: #fff; font-size: .75rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Page content ── */
+    #content { flex: 1; padding: 2rem; }
+
+    /* ── Cards ── */
+    .card {
+      border: 1px solid #e0e9e1;
+      border-radius: .75rem;
+      box-shadow: 0 1px 4px rgba(26,107,58,.05);
+    }
+    .card-header {
+      background: transparent;
+      border-bottom: 1px solid #e8ede9;
+      font-weight: 600; font-size: .9rem;
+      padding: 1rem 1.25rem;
+    }
+
+    /* ── Stat cards ── */
+    .stat-card {
+      background: #fff;
+      border: 1px solid #e0e9e1;
+      border-radius: .75rem;
+      padding: 1.4rem 1.5rem;
+      display: flex; align-items: flex-start; gap: 1rem;
+    }
+    .stat-icon {
+      width: 48px; height: 48px; border-radius: .6rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .stat-icon.green  { background: #e8f5ed; color: var(--edir-green); }
+    .stat-icon.gold   { background: #fdf2e2; color: var(--edir-gold); }
+    .stat-icon.red    { background: #fde8eb; color: var(--edir-red); }
+    .stat-icon.blue   { background: #e5f0fb; color: #2563eb; }
+    .stat-label { font-size: .78rem; color: var(--edir-muted); font-weight: 500; }
+    .stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1.1; }
+    .stat-sub   { font-size: .75rem; color: var(--edir-muted); margin-top: .2rem; }
+
+    /* ── Badges ── */
+    .badge-active    { background: #dcf5e7; color: #166534; }
+    .badge-pending   { background: #fef9c3; color: #713f12; }
+    .badge-paid      { background: #dcf5e7; color: #166534; }
+    .badge-defaulted { background: #fee2e2; color: #991b1b; }
+    .badge-suspended { background: #f3e8ff; color: #6b21a8; }
+    .badge-reported  { background: #fef9c3; color: #713f12; }
+    .badge-verified  { background: #dbeafe; color: #1e40af; }
+    .badge-approved  { background: #d1fae5; color: #065f46; }
+    .badge-closed    { background: #f3f4f6; color: #374151; }
+    .badge-waived    { background: #ede9fe; color: #4c1d95; }
+
+    .status-badge {
+      display: inline-block;
+      padding: .2rem .65rem;
+      border-radius: 2rem;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+
+    /* ── Tables ── */
+    .edir-table th {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--edir-muted);
+      font-weight: 600;
+      border-bottom: 2px solid #e8ede9 !important;
+      padding: .65rem 1rem;
+    }
+    .edir-table td {
+      padding: .75rem 1rem;
+      vertical-align: middle;
+      border-bottom: 1px solid #f0f4f1;
+      font-size: .88rem;
+    }
+    .edir-table tr:last-child td { border-bottom: none; }
+    .edir-table tr:hover td { background: #f8fbf9; }
+
+    /* ── Buttons ── */
+    .btn-edir-primary {
+      background: var(--edir-green); color: #fff; border: none;
+      padding: .45rem 1.1rem; border-radius: .4rem;
+      font-weight: 500; font-size: .88rem;
+      transition: background .15s;
+    }
+    .btn-edir-primary:hover { background: #155730; color: #fff; }
+
+    .btn-edir-gold {
+      background: var(--edir-gold); color: #fff; border: none;
+      padding: .45rem 1.1rem; border-radius: .4rem;
+      font-weight: 500; font-size: .88rem;
+    }
+    .btn-edir-gold:hover { background: #a87828; color: #fff; }
+
+    /* ── Alerts ── */
+    .django-message { position: fixed; top: 1rem; right: 1rem; z-index: 9999; min-width: 280px; }
+
+    /* ── Progress bar ── */
+    .collection-bar { height: 8px; border-radius: 4px; background: #e8ede9; overflow: hidden; }
+    .collection-fill { height: 100%; border-radius: 4px; background: var(--edir-green); transition: width .5s ease; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      #sidebar { transform: translateX(-100%); }
+      #sidebar.open { transform: translateX(0); }
+      #main { margin-left: 0; }
+      #content { padding: 1rem; }
+    }
+
+    /* ── Ethiopian pattern border ── */
+    .eth-border {
+      height: 4px;
+      background: linear-gradient(90deg,
+        var(--edir-green) 0%, var(--edir-green) 33%,
+        var(--edir-gold)  33%, var(--edir-gold)  66%,
+        var(--edir-red)   66%, var(--edir-red)  100%
+      );
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Ethiopian flag stripe at very top -->
+<div class="eth-border"></div>
+
+<!-- Messages -->
+{% if messages %}
+<div class="django-message" id="flash-messages">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert" style="font-size:.88rem;">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if user.is_authenticated %}
+
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="sidebar-brand">
+    <h1>{{ edir.name|default:"EDIR" }}</h1>
+    <small>Mutual Aid Management</small>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <a href="{% url 'dashboard:index' %}" class="sidebar-link {% if request.resolver_match.namespace == 'dashboard' and request.resolver_match.url_name == 'index' %}active{% endif %}">
+      <i class="bi bi-grid-1x2"></i> Dashboard
+    </a>
+    <a href="{% url 'notifications:announcements' %}" class="sidebar-link">
+      <i class="bi bi-megaphone"></i> Announcements
+    </a>
+
+    <div class="nav-section">Members</div>
+    <a href="{% url 'members:list' %}" class="sidebar-link {% if request.resolver_match.namespace == 'members' %}active{% endif %}">
+      <i class="bi bi-people"></i> All Members
+    </a>
+    <a href="{% url 'members:create' %}" class="sidebar-link">
+      <i class="bi bi-person-plus"></i> Add Member
+    </a>
+
+    <div class="nav-section">Finance</div>
+    <a href="{% url 'contributions:period_list' %}" class="sidebar-link {% if request.resolver_match.namespace == 'contributions' %}active{% endif %}">
+      <i class="bi bi-calendar3"></i> Contributions
+    </a>
+    <a href="{% url 'contributions:levy_list' %}" class="sidebar-link">
+      <i class="bi bi-cash-coin"></i> Special Levies
+    </a>
+
+    <div class="nav-section">Events & Claims</div>
+    <a href="{% url 'events:list' %}" class="sidebar-link {% if request.resolver_match.namespace == 'events' and request.resolver_match.url_name != 'meeting_list' %}active{% endif %}">
+      <i class="bi bi-heart-pulse"></i> Events & Payouts
+    </a>
+    <a href="{% url 'events:meeting_list' %}" class="sidebar-link {% if request.resolver_match.url_name == 'meeting_list' %}active{% endif %}">
+      <i class="bi bi-chat-square-text"></i> Meeting Minutes
+    </a>
+
+    <div class="nav-section">Reports</div>
+    <a href="{% url 'dashboard:reports' %}" class="sidebar-link">
+      <i class="bi bi-bar-chart-line"></i> Reports
+    </a>
+
+    <div class="nav-section">Communications</div>
+    <a href="/admin-portal/applications/" class="sidebar-link">
+      <i class="bi bi-person-check"></i> Applications
+    </a>
+    <a href="/admin-portal/messages/" class="sidebar-link">
+      <i class="bi bi-inbox"></i> Member Messages
+    </a>
+    <a href="/admin-portal/mass-messages/" class="sidebar-link">
+      <i class="bi bi-broadcast"></i> Mass Messages
+    </a>
+    <a href="/admin-portal/documents/upload/" class="sidebar-link">
+      <i class="bi bi-upload"></i> Upload Document
+    </a>
+
+    <div class="nav-section">Member Portal</div>
+    <a href="/portal/" class="sidebar-link">
+      <i class="bi bi-person-circle"></i> My Portal
+    </a>
+    <a href="/portal/payments/" class="sidebar-link">
+      <i class="bi bi-credit-card"></i> Payment Status
+    </a>
+    <a href="/portal/messages/" class="sidebar-link">
+      <i class="bi bi-chat-left-text"></i> My Messages
+    </a>
+    <a href="/portal/documents/" class="sidebar-link">
+      <i class="bi bi-folder2-open"></i> Document Archive
+    </a>
+
+    <div class="nav-section">Public Pages</div>
+    <a href="/apply/" class="sidebar-link" target="_blank">
+      <i class="bi bi-person-plus"></i> Registration Form
+    </a>
+    <a href="/contact/" class="sidebar-link" target="_blank">
+      <i class="bi bi-envelope"></i> Contact Form
+    </a>
+
+    {% if user.is_staff %}
+    <div class="nav-section">Admin</div>
+    <a href="/admin/" class="sidebar-link">
+      <i class="bi bi-shield-lock"></i> Django Admin
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="sidebar-footer">
+    <div>{{ edir.name|default:"EDIR" }}</div>
+    <div style="font-size:.7rem;opacity:.6;">v1.0 &middot; {% now "Y" %}</div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div id="main">
+  <div id="topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button class="d-md-none btn btn-sm btn-outline-secondary" id="sidebarToggle">
+        <i class="bi bi-list"></i>
+      </button>
+      <span class="topbar-title">{% block page_title %}Dashboard{% endblock %}</span>
+    </div>
+    <div class="topbar-actions">
+      <a href="/portal/messages/" class="notif-btn" title="Messages">
+        <i class="bi bi-chat-left-text"></i>
+        {% if unread_messages %}
+        <span class="notif-badge">{{ unread_messages }}</span>
+        {% endif %}
+      </a>
+      <a href="{% url 'notifications:list' %}" class="notif-btn" title="Notifications">
+        <i class="bi bi-bell"></i>
+        {% if unread_notifications %}
+        <span class="notif-badge">{{ unread_notifications }}</span>
+        {% endif %}
+      </a>
+      {% if user.is_staff and pending_apps_count %}
+      <a href="/admin-portal/applications/?status=pending" class="notif-btn" title="Pending Applications" style="color:var(--edir-red);">
+        <i class="bi bi-person-check"></i>
+        <span class="notif-badge" style="background:var(--edir-red);">{{ pending_apps_count }}</span>
+      </a>
+      {% endif %}
+      <div class="dropdown">
+        <a href="#" class="user-pill dropdown-toggle" data-bs-toggle="dropdown">
+          <div class="user-avatar">{{ user.first_name.0|upper|default:user.username.0|upper }}</div>
+          {{ user.get_full_name|default:user.username }}
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+          <li><a class="dropdown-item" href="/accounts/password/change/">Change Password</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <form action="{% url 'account_logout' %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <button class="dropdown-item text-danger" type="submit">Sign Out</button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+{% else %}
+<!-- Unauthenticated: full-width -->
+<div class="container-fluid" style="min-height:calc(100vh - 4px)">
+  {% block auth_content %}{% endblock %}
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Auto-dismiss flash messages
+  setTimeout(() => {
+    document.querySelectorAll('#flash-messages .alert').forEach(el => {
+      const a = bootstrap.Alert.getOrCreateInstance(el);
+      a.close();
+    });
+  }, 5000);
+
+  // Mobile sidebar toggle
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

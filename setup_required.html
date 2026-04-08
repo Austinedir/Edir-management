@@ -1,0 +1,208 @@
+from celery import shared_task
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+@shared_task(bind=True, max_retries=3)
+def send_contribution_reminders(self):
+    """Send monthly contribution reminders to members with pending contributions."""
+    from apps.contributions.models import Contribution, ContributionPeriod
+    from apps.notifications.models import Notification
+    from apps.members.models import Member
+
+    now = timezone.now()
+    try:
+        period = ContributionPeriod.objects.get(year=now.year, month=now.month)
+    except ContributionPeriod.DoesNotExist:
+        logger.warning("No contribution period found for current month.")
+        return
+
+    pending = Contribution.objects.filter(
+        period=period, status=Contribution.Status.PENDING
+    ).select_related('member', 'member__user')
+
+    sent = 0
+    for contrib in pending:
+        member = contrib.member
+        # In-app notification
+        Notification.objects.get_or_create(
+            member=member,
+            notification_type=Notification.Type.CONTRIBUTION_DUE,
+            related_contribution_period=period,
+            defaults={
+                'title': f'Monthly Contribution Due – {period}',
+                'message': (
+                    f'Dear {member.first_name}, your monthly contribution of '
+                    f'{contrib.amount} ETB for {period} is due by {period.due_date}. '
+                    f'Please pay to your edir collector.'
+                ),
+                'channel': Notification.Channel.IN_APP,
+            }
+        )
+
+        # Email if available
+        email = member.email or (member.user.email if member.user else None)
+        if email:
+            try:
+                send_mail(
+                    subject=f'[{settings.EDIR_NAME}] Contribution Due – {period}',
+                    message=(
+                        f'Dear {member.first_name},\n\n'
+                        f'This is a reminder that your monthly contribution of '
+                        f'{contrib.amount} ETB for {period} is due by {period.due_date}.\n\n'
+                        f'Please contact your edir treasurer to make payment.\n\n'
+                        f'Thank you,\n{settings.EDIR_NAME}'
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=True,
+                )
+                sent += 1
+            except Exception as e:
+                logger.error(f"Failed to send email to {email}: {e}")
+
+    logger.info(f"Sent {sent} contribution reminders for {period}.")
+    return f"Sent {sent} reminders."
+
+
+@shared_task(bind=True, max_retries=3)
+def send_event_notification_to_all(self, event_id):
+    """Notify all members about a reported death/event."""
+    from apps.events.models import EdirEvent
+    from apps.notifications.models import Notification
+    from apps.members.models import Member
+
+    try:
+        event = EdirEvent.objects.select_related('member', 'edir').get(pk=event_id)
+    except EdirEvent.DoesNotExist:
+        return
+
+    members = Member.objects.filter(edir=event.edir, status='active').exclude(pk=event.member.pk)
+
+    title = f'Edir Event: {event.get_event_type_display()}'
+    message = (
+        f'Dear members, please be informed that {event.get_event_type_display()} '
+        f'has been reported for our member {event.member.full_name}.'
+    )
+    if event.funeral_date and event.funeral_location:
+        message += f'\n\nCeremony: {event.funeral_date} at {event.funeral_location}.'
+    message += f'\n\nMay we stand together in support.\n{event.edir.name}'
+
+    notifications = [
+        Notification(
+            member=m,
+            notification_type=Notification.Type.EVENT_REPORTED,
+            title=title,
+            message=message,
+            channel=Notification.Channel.IN_APP,
+            related_event=event,
+        )
+        for m in members
+    ]
+    Notification.objects.bulk_create(notifications, ignore_conflicts=True)
+
+    # Send emails
+    emails = [
+        m.email or (m.user.email if m.user else None)
+        for m in members
+    ]
+    emails = [e for e in emails if e]
+    if emails:
+        try:
+            send_mail(
+                subject=f'[{event.edir.name}] {title}',
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=emails,
+                fail_silently=True,
+            )
+        except Exception as e:
+            logger.error(f"Bulk event email failed: {e}")
+
+    return f"Notified {len(members)} members about event {event_id}."
+
+
+@shared_task
+def flag_chronic_defaulters():
+    """Auto-flag members with 3+ months unpaid; send alert to admins."""
+    from apps.members.models import Member
+    from apps.contributions.models import Contribution
+    from django.db.models import Count, Q
+    from apps.members.models import EdirGroup
+
+    for edir in EdirGroup.objects.filter(is_active=True):
+        defaulters = Member.objects.filter(edir=edir, status='active').annotate(
+            unpaid=Count('contributions', filter=Q(contributions__status='pending'))
+        ).filter(unpaid__gte=3)
+
+        if defaulters.exists():
+            names = ', '.join(d.full_name for d in defaulters[:10])
+            admin_emails = list(
+                edir.members.filter(user__is_staff=True)
+                .values_list('user__email', flat=True)
+            )
+            if admin_emails:
+                send_mail(
+                    subject=f'[{edir.name}] Members with 3+ months arrears',
+                    message=f'The following members have 3 or more unpaid months:\n\n{names}\n\nPlease follow up.',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=admin_emails,
+                    fail_silently=True,
+                )
+
+    return "Defaulter check complete."
+
+
+@shared_task(bind=True, max_retries=3)
+def send_mass_message_task(self, mass_message_id):
+    """FR 3.1/3.2 – Send mass email/SMS to all targeted members."""
+    from apps.members.models_extra import MassMessage
+    from apps.members.models import Member
+
+    try:
+        mm = MassMessage.objects.get(pk=mass_message_id)
+    except MassMessage.DoesNotExist:
+        return
+
+    qs = Member.objects.filter(edir=mm.edir)
+    if mm.target_active_only:
+        qs = qs.filter(status='active')
+    if mm.target_city:
+        qs = qs.filter(city__iexact=mm.target_city)
+
+    sent = 0
+    failed = 0
+
+    if mm.channel in ('email', 'both'):
+        emails = [m.email for m in qs if m.email]
+        mm.recipients_count = len(emails)
+        mm.save(update_fields=['recipients_count'])
+
+        # Send in batches of 50
+        for i in range(0, len(emails), 50):
+            batch = emails[i:i+50]
+            try:
+                send_mail(
+                    subject=mm.subject,
+                    message=mm.body,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=batch,
+                    fail_silently=False,
+                )
+                sent += len(batch)
+            except Exception as e:
+                logger.error(f"Mass email batch failed: {e}")
+                failed += len(batch)
+
+    mm.sent_count = sent
+    mm.failed_count = failed
+    mm.status = MassMessage.Status.SENT if failed == 0 else MassMessage.Status.FAILED
+    mm.sent_at = timezone.now()
+    mm.save(update_fields=['sent_count', 'failed_count', 'status', 'sent_at'])
+
+    logger.info(f"Mass message {mass_message_id}: {sent} sent, {failed} failed.")
+    return f"Sent {sent}, failed {failed}."

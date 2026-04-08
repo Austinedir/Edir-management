@@ -1,0 +1,25 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags humanize %}
+{% block title %}Disburse Payout{% endblock %}
+{% block page_title %}Disburse Payout{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header" style="border-left:4px solid var(--edir-green);">
+        <i class="bi bi-send-check me-2 text-success"></i>Confirm Payout Disbursement
+      </div>
+      <div class="card-body">
+        <div class="alert alert-success mb-4" style="font-size:.88rem;">
+          <strong>Event:</strong> {{ event.get_event_type_display }} for {{ event.member.full_name }}<br>
+          <strong>Payout Amount:</strong> {{ payout.amount|floatformat:0|intcomma }} ETB
+        </div>
+        <form method="post">
+          {% csrf_token %}
+          {% crispy form %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

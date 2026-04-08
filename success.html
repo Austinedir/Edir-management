@@ -1,0 +1,37 @@
+{% extends "base/base.html" %}
+{% block title %}Admin Inbox{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <h4 class="mb-4" style="font-family:'Playfair Display',serif;">
+    <i class="bi bi-inbox me-2" style="color:var(--edir-green);"></i>Admin Inbox – Member Messages
+  </h4>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      {% for msg in inbox %}
+      <div class="d-flex align-items-start gap-3 px-4 py-3 border-bottom {% if not msg.is_read %}bg-light{% endif %}">
+        <div class="rounded-circle d-flex align-items-center justify-content-center fw-700"
+             style="width:40px;height:40px;min-width:40px;background:var(--edir-green);color:#fff;font-size:.85rem;">
+          {{ msg.sender.first_name|first|default:"?" }}
+        </div>
+        <div class="flex-grow-1">
+          <div class="d-flex justify-content-between">
+            <span class="fw-600 {% if not msg.is_read %}text-dark{% else %}text-muted{% endif %}">{{ msg.subject }}</span>
+            <span class="text-muted small">{{ msg.created_at|timesince }} ago</span>
+          </div>
+          <div class="text-muted small">
+            From: {{ msg.sender.get_full_name|default:msg.sender.username }}
+            {% if msg.sender.member_profile %} ({{ msg.sender.member_profile.member_number }}){% endif %}
+          </div>
+          <div class="text-muted small mt-1">{{ msg.body|truncatechars:100 }}</div>
+        </div>
+        <a href="/admin-portal/messages/{{ msg.pk }}/reply/" class="btn btn-sm btn-outline-secondary align-self-center">Reply</a>
+      </div>
+      {% empty %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-inbox fs-2 d-block mb-2"></i>No messages from members.
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

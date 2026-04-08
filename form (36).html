@@ -1,0 +1,43 @@
+{% extends "base/base.html" %}
+{% block title %}Approve Application{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:600px;">
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="/admin-portal/applications/{{ app.pk }}/" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <h5 class="mb-0" style="font-family:'Playfair Display',serif;">Approve Application</h5>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <div class="alert mb-4" style="background:#f0f7f4;border:1px solid #c3dfc9;">
+        <div class="fw-600 mb-1"><i class="bi bi-person me-2" style="color:var(--edir-green);"></i>{{ app.full_name }}</div>
+        <div class="small text-muted">{{ app.email }} &nbsp;·&nbsp; {{ app.phone }}</div>
+        <div class="small text-muted">{{ app.city }}, {{ app.state }} {{ app.zip_code }}</div>
+      </div>
+
+      <p class="text-muted" style="font-size:.88rem;">
+        Approving this application will:
+        <ul style="font-size:.88rem;">
+          <li>Create a new <strong>Active Member</strong> record</li>
+          <li>Send an <strong>approval email</strong> to {{ app.email }}</li>
+          <li>Set the application status to <strong>Approved</strong></li>
+        </ul>
+      </p>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label fw-600">Admin Notes (optional)</label>
+          <textarea name="notes" class="form-control" rows="3" placeholder="Any notes for the record..."></textarea>
+        </div>
+        <div class="d-flex gap-3">
+          <button type="submit" class="btn flex-grow-1" style="background:var(--edir-green);color:#fff;">
+            <i class="bi bi-check-lg me-2"></i>Confirm Approval & Create Member
+          </button>
+          <a href="/admin-portal/applications/{{ app.pk }}/" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

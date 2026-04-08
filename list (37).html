@@ -1,0 +1,28 @@
+{% extends "base/base.html" %}
+{% block title %}Upload Document{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:640px;">
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="/portal/documents/" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <h5 class="mb-0" style="font-family:'Playfair Display',serif;">
+      <i class="bi bi-upload me-2" style="color:var(--edir-green);"></i>Upload Document
+    </h5>
+  </div>
+
+  <div class="alert mb-4" style="background:#f0f7f4;border:1px solid #c3dfc9;font-size:.85rem;">
+    <i class="bi bi-info-circle me-2" style="color:var(--edir-green);"></i>
+    Use this form to upload bank statements, financial reports, meeting minutes, and other edir documents.
+    Documents marked as "visible to members" will appear in the member document archive (FR 1.1.7).
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      {% load crispy_forms_tags %}
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% crispy form %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

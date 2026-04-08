@@ -1,0 +1,15 @@
+{% extends "base/base.html" %}
+{% block title %}Setup Required{% endblock %}
+{% block page_title %}Welcome{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-6 text-center">
+    <div style="font-size:4rem;margin-bottom:1rem;">🌿</div>
+    <h2 style="font-family:'Playfair Display',serif;">Welcome to EDIR</h2>
+    <p class="text-muted">No edir group has been configured yet. Please visit the admin panel to create your edir group.</p>
+    <a href="/admin/members/edirgroup/add/" class="btn btn-edir-primary mt-2">
+      <i class="bi bi-plus-circle me-2"></i>Create Edir Group
+    </a>
+  </div>
+</div>
+{% endblock %}

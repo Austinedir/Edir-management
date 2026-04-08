@@ -1,0 +1,81 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;margin-bottom:1.5rem;">Annual Summary</h2>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="bi bi-arrow-down-circle"></i></div>
+      <div>
+        <div class="stat-label">Total Collected (This Year)</div>
+        <div class="stat-value">{{ annual_collected|floatformat:0|intcomma }}</div>
+        <div class="stat-sub">ETB</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card">
+      <div class="stat-icon red"><i class="bi bi-arrow-up-circle"></i></div>
+      <div>
+        <div class="stat-label">Total Payouts (This Year)</div>
+        <div class="stat-value">{{ annual_payouts|floatformat:0|intcomma }}</div>
+        <div class="stat-sub">ETB</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card">
+      <div class="stat-icon {% if net_balance >= 0 %}green{% else %}red{% endif %}">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div>
+        <div class="stat-label">Net Balance</div>
+        <div class="stat-value {% if net_balance < 0 %}text-danger{% endif %}">
+          {{ net_balance|floatformat:0|intcomma }}
+        </div>
+        <div class="stat-sub">ETB</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if defaulters %}
+<div class="card">
+  <div class="card-header" style="border-left:4px solid var(--edir-red);">
+    <i class="bi bi-exclamation-triangle me-2 text-warning"></i>Members with 3+ Months Unpaid
+  </div>
+  <div class="card-body p-0">
+    <table class="table edir-table mb-0">
+      <thead>
+        <tr><th>Member #</th><th>Name</th><th>Phone</th><th>Unpaid Months</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for member in defaulters %}
+        <tr>
+          <td><code style="font-size:.8rem;">{{ member.member_number }}</code></td>
+          <td>
+            <a href="{% url 'members:detail' member.pk %}" class="text-decoration-none fw-500" style="color:var(--edir-dark);">
+              {{ member.full_name }}
+            </a>
+          </td>
+          <td style="font-size:.85rem;">{{ member.phone|default:"—" }}</td>
+          <td>
+            <span class="status-badge badge-defaulted">{{ member.unpaid }} months</span>
+          </td>
+          <td>
+            <a href="{% url 'members:detail' member.pk %}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-eye"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

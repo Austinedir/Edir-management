@@ -1,0 +1,116 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+
+{% block title %}{{ period }} – Contributions{% endblock %}
+{% block page_title %}{{ period }} Contributions{% endblock %}
+
+{% block content %}
+<!-- Stats row -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-3">
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="bi bi-check2-circle"></i></div>
+      <div>
+        <div class="stat-label">Paid</div>
+        <div class="stat-value">{{ stats.paid }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="stat-card">
+      <div class="stat-icon gold"><i class="bi bi-hourglass-split"></i></div>
+      <div>
+        <div class="stat-label">Pending</div>
+        <div class="stat-value">{{ stats.pending }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="bi bi-slash-circle"></i></div>
+      <div>
+        <div class="stat-label">Waived</div>
+        <div class="stat-value">{{ stats.waived }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="bi bi-cash-stack"></i></div>
+      <div>
+        <div class="stat-label">Total Collected</div>
+        <div class="stat-value" style="font-size:1.3rem;">{{ stats.total_collected|floatformat:0|intcomma }}</div>
+        <div class="stat-sub">ETB</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+      <span style="font-size:.85rem;font-weight:600;color:var(--edir-muted);">Filter:</span>
+      {% for val, label in status_choices %}
+      <a href="?status={{ val }}"
+         class="btn btn-sm {% if status_filter == val %}btn-edir-primary{% else %}btn-outline-secondary{% endif %}">
+        {{ label }}
+      </a>
+      {% endfor %}
+      <a href="?" class="btn btn-sm {% if not status_filter %}btn-edir-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-list-check me-2"></i>{{ period }} — {{ period.edir.name }}</span>
+    <span class="text-muted" style="font-size:.8rem;">Due: {{ period.due_date }}</span>
+  </div>
+  <div class="card-body p-0">
+    <table class="table edir-table mb-0">
+      <thead>
+        <tr>
+          <th>Member #</th>
+          <th>Name</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Paid Date</th>
+          <th>Method</th>
+          <th>Receipt</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for contrib in contributions %}
+        <tr>
+          <td><code style="font-size:.8rem;">{{ contrib.member.member_number }}</code></td>
+          <td>
+            <a href="{% url 'members:detail' contrib.member.pk %}" class="text-decoration-none" style="font-weight:500;color:var(--edir-dark);">
+              {{ contrib.member.full_name }}
+            </a>
+          </td>
+          <td>{{ contrib.amount|floatformat:0|intcomma }} ETB</td>
+          <td><span class="status-badge badge-{{ contrib.status }}">{{ contrib.get_status_display }}</span></td>
+          <td style="font-size:.82rem;">{{ contrib.paid_date|default:"—" }}</td>
+          <td style="font-size:.82rem;">{{ contrib.get_payment_method_display|default:"—" }}</td>
+          <td style="font-size:.82rem;">{{ contrib.receipt_number|default:"—" }}</td>
+          <td>
+            {% if contrib.status == 'pending' %}
+            <a href="{% url 'contributions:mark_paid' contrib.pk %}"
+               class="btn btn-sm btn-success" style="font-size:.78rem;padding:.2rem .6rem;">
+              <i class="bi bi-check2 me-1"></i>Mark Paid
+            </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center text-muted py-4" style="font-size:.85rem;">No records</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

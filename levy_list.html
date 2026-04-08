@@ -1,0 +1,19 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}Record Meeting{% endblock %}
+{% block page_title %}Record Meeting{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-chat-square-text me-2"></i>Record Meeting Minutes</div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {% crispy form %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

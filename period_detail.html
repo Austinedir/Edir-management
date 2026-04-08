@@ -1,0 +1,59 @@
+{% extends "base/base.html" %}
+{% block title %}Meeting Minutes{% endblock %}
+{% block page_title %}Meeting Minutes{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;margin:0;">Meeting Minutes</h2>
+  <a href="{% url 'events:meeting_create' %}" class="btn btn-edir-primary">
+    <i class="bi bi-plus-circle me-1"></i> Record Meeting
+  </a>
+</div>
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table edir-table mb-0">
+      <thead>
+        <tr><th>Date</th><th>Location</th><th>Attendees</th><th>Recorded By</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for meeting in meetings %}
+        <tr>
+          <td class="fw-600">{{ meeting.date }}</td>
+          <td style="font-size:.85rem;">{{ meeting.location|default:"—" }}</td>
+          <td style="font-size:.85rem;">{{ meeting.attendees.count }} members</td>
+          <td style="font-size:.85rem;">{{ meeting.recorded_by|default:"—" }}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#meeting{{ meeting.pk|slugify }}">
+              <i class="bi bi-eye"></i>
+            </button>
+          </td>
+        </tr>
+        <!-- Modal -->
+        <div class="modal fade" id="meeting{{ meeting.pk|slugify }}" tabindex="-1">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Meeting – {{ meeting.date }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body" style="font-size:.88rem;">
+                {% if meeting.agenda %}<p><strong>Agenda:</strong><br>{{ meeting.agenda|linebreaks }}</p>{% endif %}
+                <p><strong>Minutes:</strong><br>{{ meeting.minutes|linebreaks }}</p>
+                {% if meeting.document %}
+                <a href="{{ meeting.document.url }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                  <i class="bi bi-paperclip me-1"></i>Attached Document
+                </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center text-muted py-5" style="font-size:.85rem;">No meetings recorded</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

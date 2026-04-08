@@ -1,0 +1,82 @@
+{% extends "base/base.html" %}
+{% block title %}Events & Claims{% endblock %}
+{% block page_title %}Events & Claims{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;margin:0;">Events & Claims</h2>
+    <p class="text-muted mb-0" style="font-size:.85rem;">Death, illness, and other member events</p>
+  </div>
+  <a href="{% url 'events:create' %}" class="btn" style="background:var(--edir-red);color:#fff;">
+    <i class="bi bi-heart-pulse me-1"></i> Report Event
+  </a>
+</div>
+
+<!-- Filter bar -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+      <span style="font-size:.82rem;font-weight:600;color:var(--edir-muted);">Type:</span>
+      <a href="?" class="btn btn-sm {% if not type_filter %}btn-edir-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+      {% for val, label in event_type_choices %}
+      <a href="?type={{ val }}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+         class="btn btn-sm {% if type_filter == val %}btn-edir-primary{% else %}btn-outline-secondary{% endif %}">
+        {{ label }}
+      </a>
+      {% endfor %}
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table edir-table mb-0">
+      <thead>
+        <tr>
+          <th>Member</th>
+          <th>Event Type</th>
+          <th>Event Date</th>
+          <th>Affected Person</th>
+          <th>Status</th>
+          <th>Payout</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in events %}
+        <tr>
+          <td>
+            <a href="{% url 'members:detail' event.member.pk %}" class="text-decoration-none fw-500" style="color:var(--edir-dark);">
+              {{ event.member.full_name }}
+            </a>
+            <div style="font-size:.75rem;color:var(--edir-muted);">{{ event.member.member_number }}</div>
+          </td>
+          <td style="font-size:.85rem;">{{ event.get_event_type_display }}</td>
+          <td style="font-size:.85rem;">{{ event.event_date }}</td>
+          <td style="font-size:.83rem;">{{ event.deceased_name|default:"—" }}</td>
+          <td><span class="status-badge badge-{{ event.status }}">{{ event.get_status_display }}</span></td>
+          <td style="font-size:.85rem;">
+            {% with amt=event.get_payout_amount %}
+            {% if amt > 0 %}{{ amt|floatformat:0 }} ETB{% else %}—{% endif %}
+            {% endwith %}
+          </td>
+          <td>
+            <a href="{% url 'events:detail' event.pk %}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-eye"></i>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-muted py-5">
+            <i class="bi bi-heart" style="font-size:2rem;opacity:.2;display:block;margin-bottom:.5rem;"></i>
+            No events recorded
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

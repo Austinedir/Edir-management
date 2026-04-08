@@ -1,0 +1,25 @@
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from django.views.generic import RedirectView
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('accounts/', include('allauth.urls')),
+    path('dashboard/', include('apps.members.urls.dashboard')),
+    path('members/', include('apps.members.urls.members')),
+    path('contributions/', include('apps.contributions.urls')),
+    path('events/', include('apps.events.urls')),
+    path('notifications/', include('apps.notifications.urls')),
+    path('', include('apps.members.urls.portal')),
+    path('', RedirectView.as_view(url='/dashboard/', permanent=False), name='home'),
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Custom admin branding
+admin.site.site_header = 'EDIR Administration'
+admin.site.site_title = 'EDIR Admin'
+admin.site.index_title = 'Edir Management'

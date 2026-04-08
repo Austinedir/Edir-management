@@ -1,0 +1,31 @@
+app = "austin-area-edir"
+primary_region = "dfw"   # Dallas – closest to Austin TX
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  DEBUG = "False"
+  EDIR_NAME = "Austin Area Mutual Aid EDIR"
+  EDIR_CURRENCY = "USD"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 200
+    soft_limit = 150
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[deploy]
+  release_command = "python manage.py migrate --noinput && python manage.py collectstatic --noinput"

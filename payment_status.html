@@ -1,0 +1,17 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}New Contribution Period{% endblock %}
+{% block page_title %}New Contribution Period{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-calendar-plus me-2"></i>Create Monthly Period</div>
+      <div class="card-body">
+        <p class="text-muted" style="font-size:.88rem;">Creating a period will automatically generate contribution records for all active members.</p>
+        <form method="post">{% csrf_token %}{% crispy form %}</form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

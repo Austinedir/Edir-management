@@ -1,0 +1,233 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+
+{% block title %}Dashboard – {{ edir.name }}{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stat Cards Row -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="bi bi-people-fill"></i></div>
+      <div>
+        <div class="stat-label">Active Members</div>
+        <div class="stat-value">{{ total_members }}</div>
+        <div class="stat-sub">+{{ new_this_month }} joined this month</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon gold"><i class="bi bi-cash-stack"></i></div>
+      <div>
+        <div class="stat-label">Collected This Month</div>
+        <div class="stat-value">{{ total_collected|floatformat:0|intcomma }} <small style="font-size:.9rem;font-weight:400">ETB</small></div>
+        <div class="stat-sub">{{ paid_count }} of {{ total_members }} paid</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon red"><i class="bi bi-heart-pulse-fill"></i></div>
+      <div>
+        <div class="stat-label">Open Events</div>
+        <div class="stat-value">{{ open_events }}</div>
+        <div class="stat-sub">Awaiting action</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="bi bi-send-check-fill"></i></div>
+      <div>
+        <div class="stat-label">Payouts This Year</div>
+        <div class="stat-value">{{ total_payouts|floatformat:0|intcomma }} <small style="font-size:.9rem;font-weight:400">ETB</small></div>
+        <div class="stat-sub">Disbursed to members</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Collection progress + chart -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-bar-chart me-2 text-success"></i>6-Month Collections</span>
+        <a href="{% url 'contributions:period_list' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+      </div>
+      <div class="card-body">
+        <canvas id="collectionChart" height="130"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header">
+        <i class="bi bi-calendar3-range me-2 text-warning"></i>
+        {% if current_period %}{{ current_period }} Collection Rate{% else %}No Active Period{% endif %}
+      </div>
+      <div class="card-body">
+        {% if current_period %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1" style="font-size:.85rem;">
+            <span>{{ paid_count }} paid</span>
+            <span class="fw-bold">{{ collection_rate }}%</span>
+          </div>
+          <div class="collection-bar">
+            <div class="collection-fill" style="width:{{ collection_rate }}%"></div>
+          </div>
+          <div class="d-flex justify-content-between mt-1" style="font-size:.75rem;color:var(--edir-muted);">
+            <span>{{ pending_count }} pending</span>
+            <span>Due {{ current_period.due_date }}</span>
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="{% url 'contributions:period_detail' current_period.pk %}" class="btn btn-edir-primary btn-sm flex-fill">
+            <i class="bi bi-eye me-1"></i>View Period
+          </a>
+          <a href="{% url 'notifications:list' %}" class="btn btn-outline-secondary btn-sm flex-fill">
+            <i class="bi bi-bell me-1"></i>Send Reminders
+          </a>
+        </div>
+        {% else %}
+        <p class="text-muted mb-3">No contribution period for this month.</p>
+        <a href="{% url 'contributions:period_create' %}" class="btn btn-edir-primary">
+          <i class="bi bi-plus me-1"></i>Create Period
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent events + Announcements -->
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-heart-pulse me-2 text-danger"></i>Recent Events</span>
+        <a href="{% url 'events:create' %}" class="btn btn-sm" style="background:#fde8eb;color:var(--edir-red);font-weight:600;">
+          + Report Event
+        </a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_events %}
+        <table class="table edir-table mb-0">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in recent_events %}
+            <tr>
+              <td>
+                <a href="{% url 'events:detail' event.pk %}" class="text-decoration-none fw-500">
+                  {{ event.member.full_name }}
+                </a>
+              </td>
+              <td style="font-size:.82rem;">{{ event.get_event_type_display }}</td>
+              <td style="font-size:.82rem;">{{ event.event_date }}</td>
+              <td>
+                <span class="status-badge badge-{{ event.status }}">{{ event.get_status_display }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="p-4 text-center text-muted" style="font-size:.88rem;">
+          <i class="bi bi-check-circle" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem;"></i>
+          No recent events
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    {% if announcements %}
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-megaphone me-2"></i>Announcements</div>
+      <div class="card-body p-0">
+        {% for ann in announcements %}
+        <div class="p-3 {% if not forloop.last %}border-bottom{% endif %}">
+          <div class="fw-600" style="font-size:.88rem;">{{ ann.title }}</div>
+          <div class="text-muted" style="font-size:.78rem;margin-top:.2rem;">{{ ann.body|truncatechars:120 }}</div>
+          <div style="font-size:.72rem;color:var(--edir-muted);margin-top:.3rem;">{{ ann.published_at|date:"M j, Y" }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user_notifications %}
+    <div class="card">
+      <div class="card-header"><i class="bi bi-bell me-2"></i>Your Notifications</div>
+      <div class="card-body p-0">
+        {% for notif in user_notifications %}
+        <div class="p-3 d-flex gap-2 {% if not forloop.last %}border-bottom{% endif %}" style="background:{% if not notif.is_read %}#f8fbf9{% endif %}">
+          <div class="flex-grow-1">
+            <div class="fw-600" style="font-size:.83rem;">{{ notif.title }}</div>
+            <div class="text-muted" style="font-size:.76rem;">{{ notif.message|truncatechars:80 }}</div>
+          </div>
+          <a href="{% url 'notifications:mark_read' notif.pk %}" class="text-muted" title="Mark read" style="font-size:.9rem;flex-shrink:0;">
+            <i class="bi bi-check2"></i>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const chartData = {{ chart_data|safe }};
+const ctx = document.getElementById('collectionChart');
+if (ctx) {
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: chartData.map(d => d.month),
+      datasets: [{
+        label: 'ETB Collected',
+        data: chartData.map(d => d.amount),
+        backgroundColor: 'rgba(26,107,58,.15)',
+        borderColor: 'rgba(26,107,58,.8)',
+        borderWidth: 2,
+        borderRadius: 6,
+        hoverBackgroundColor: 'rgba(26,107,58,.25)',
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.parsed.y.toLocaleString()} ETB`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,.04)' },
+          ticks: { callback: v => v.toLocaleString(), font: { size: 11 } }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+}
+</script>
+{% endblock %}

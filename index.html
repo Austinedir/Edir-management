@@ -1,0 +1,51 @@
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from django.utils import timezone
+from django.db.models import Q
+from apps.members.models import EdirGroup
+from apps.notifications.models import Notification, Announcement
+from apps.notifications.forms import AnnouncementForm
+
+
+@login_required
+def notification_list(request):
+    notifications = Notification.objects.filter(
+        Q(member__user=request.user) | Q(member__isnull=True)
+    ).order_by('-created_at')
+    return render(request, 'notifications/list.html', {'notifications': notifications})
+
+
+@login_required
+def mark_read(request, pk):
+    n = get_object_or_404(Notification, pk=pk)
+    n.mark_read()
+    return redirect('notifications:list')
+
+
+@login_required
+def announcement_list(request):
+    edir = get_object_or_404(EdirGroup, is_active=True)
+    announcements = Announcement.objects.filter(edir=edir, is_published=True).order_by('-published_at')
+    return render(request, 'notifications/announcements.html', {
+        'announcements': announcements, 'edir': edir
+    })
+
+
+@login_required
+def announcement_create(request):
+    edir = get_object_or_404(EdirGroup, is_active=True)
+    if request.method == 'POST':
+        form = AnnouncementForm(request.POST)
+        if form.is_valid():
+            ann = form.save(commit=False)
+            ann.edir = edir
+            ann.created_by = request.user
+            if ann.is_published:
+                ann.published_at = timezone.now()
+            ann.save()
+            messages.success(request, 'Announcement saved.')
+            return redirect('notifications:announcements')
+    else:
+        form = AnnouncementForm()
+    return render(request, 'notifications/announcement_form.html', {'form': form})

@@ -1,0 +1,211 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+
+{% block title %}Event – {{ event.member.full_name }}{% endblock %}
+{% block page_title %}Event Detail{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Main details -->
+  <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-heart-pulse me-2 text-danger"></i>{{ event.get_event_type_display }}</span>
+        <span class="status-badge badge-{{ event.status }} fs-6">{{ event.get_status_display }}</span>
+      </div>
+      <div class="card-body">
+        <div class="row g-3" style="font-size:.88rem;">
+          <div class="col-sm-6">
+            <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;">Affected Member</div>
+            <a href="{% url 'members:detail' event.member.pk %}" class="fw-600 text-decoration-none" style="color:var(--edir-dark);">
+              {{ event.member.full_name }}
+            </a>
+            <div class="text-muted">{{ event.member.member_number }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;">Deceased / Affected Person</div>
+            <div class="fw-500">{{ event.deceased_name|default:"—" }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;">Event Date</div>
+            <div>{{ event.event_date }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;">Funeral / Ceremony Date</div>
+            <div>{{ event.funeral_date|default:"—" }}</div>
+          </div>
+          <div class="col-12">
+            <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;">Location</div>
+            <div>{{ event.funeral_location|default:"—" }}</div>
+          </div>
+          {% if event.description %}
+          <div class="col-12">
+            <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;">Description</div>
+            <div>{{ event.description }}</div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Documents -->
+        {% if event.death_certificate or event.supporting_document %}
+        <div class="mt-3 pt-3 border-top">
+          <div class="text-muted mb-2" style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Documents</div>
+          <div class="d-flex gap-2 flex-wrap">
+            {% if event.death_certificate %}
+            <a href="{{ event.death_certificate.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-file-earmark-text me-1"></i>Death Certificate
+            </a>
+            {% endif %}
+            {% if event.supporting_document %}
+            <a href="{{ event.supporting_document.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-file-earmark me-1"></i>Supporting Document
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Payout info -->
+    {% if payout %}
+    <div class="card">
+      <div class="card-header"><i class="bi bi-send-check me-2 text-success"></i>Payout</div>
+      <div class="card-body" style="font-size:.88rem;">
+        <div class="row g-3">
+          <div class="col-sm-4">
+            <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;">Amount</div>
+            <div class="fw-700" style="font-size:1.3rem;">{{ payout.amount|floatformat:0|intcomma }} ETB</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;">Recipient</div>
+            <div>{{ payout.recipient_name }}</div>
+            <div class="text-muted">{{ payout.recipient_phone|default:"" }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;">Status</div>
+            <span class="status-badge badge-{{ payout.status }}">{{ payout.get_status_display }}</span>
+          </div>
+          {% if payout.payment_reference %}
+          <div class="col-sm-6">
+            <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;">Reference</div>
+            <div>{{ payout.payment_reference }}</div>
+          </div>
+          {% endif %}
+          {% if payout.disbursed_at %}
+          <div class="col-sm-6">
+            <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;">Disbursed</div>
+            <div>{{ payout.disbursed_at|date:"M j, Y H:i" }} by {{ payout.disbursed_by }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Workflow sidebar -->
+  <div class="col-lg-4">
+    <!-- Workflow actions -->
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-diagram-3 me-2"></i>Workflow</div>
+      <div class="card-body">
+        <!-- Timeline -->
+        <div class="d-flex flex-column gap-2 mb-3" style="font-size:.83rem;">
+          <div class="d-flex align-items-center gap-2">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--edir-green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;">
+              <i class="bi bi-check2"></i>
+            </div>
+            <div>
+              <div class="fw-600">Reported</div>
+              <div class="text-muted" style="font-size:.75rem;">by {{ event.reported_by|default:"—" }} on {{ event.created_at|date:"M j" }}</div>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            <div style="width:24px;height:24px;border-radius:50%;background:{% if event.verified_by %}var(--edir-green){% else %}#e0e9e1{% endif %};color:{% if event.verified_by %}#fff{% else %}var(--edir-muted){% endif %};display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;">
+              <i class="bi bi-{% if event.verified_by %}check2{% else %}circle{% endif %}"></i>
+            </div>
+            <div>
+              <div class="fw-600">Verified</div>
+              {% if event.verified_by %}
+              <div class="text-muted" style="font-size:.75rem;">by {{ event.verified_by }} on {{ event.verified_at|date:"M j" }}</div>
+              {% else %}
+              <div class="text-muted" style="font-size:.75rem;">Awaiting verification</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            <div style="width:24px;height:24px;border-radius:50%;background:{% if event.approved_by %}var(--edir-green){% else %}#e0e9e1{% endif %};color:{% if event.approved_by %}#fff{% else %}var(--edir-muted){% endif %};display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;">
+              <i class="bi bi-{% if event.approved_by %}check2{% else %}circle{% endif %}"></i>
+            </div>
+            <div>
+              <div class="fw-600">Approved</div>
+              {% if event.approved_by %}
+              <div class="text-muted" style="font-size:.75rem;">by {{ event.approved_by }} on {{ event.approved_at|date:"M j" }}</div>
+              {% else %}
+              <div class="text-muted" style="font-size:.75rem;">Awaiting approval</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            <div style="width:24px;height:24px;border-radius:50%;background:{% if payout and payout.status == 'disbursed' %}var(--edir-green){% else %}#e0e9e1{% endif %};color:{% if payout and payout.status == 'disbursed' %}#fff{% else %}var(--edir-muted){% endif %};display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;">
+              <i class="bi bi-{% if payout and payout.status == 'disbursed' %}check2{% else %}circle{% endif %}"></i>
+            </div>
+            <div>
+              <div class="fw-600">Payout Disbursed</div>
+              <div class="text-muted" style="font-size:.75rem;">
+                {% if payout_amount > 0 %}Eligible: {{ payout_amount|floatformat:0 }} ETB{% else %}No payout{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        {% if request.user.is_staff %}
+        <div class="d-grid gap-2">
+          {% if event.status == 'reported' %}
+          <a href="{% url 'events:verify' event.pk %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-shield-check me-1"></i>Verify Event
+          </a>
+          {% endif %}
+          {% if event.status == 'verified' %}
+          <a href="{% url 'events:approve' event.pk %}" class="btn btn-sm btn-edir-primary">
+            <i class="bi bi-check2-all me-1"></i>Approve & Create Payout
+          </a>
+          {% endif %}
+          {% if event.status == 'payout_pending' and payout %}
+          <a href="{% url 'events:disburse' event.pk %}" class="btn btn-sm btn-success">
+            <i class="bi bi-send me-1"></i>Disburse Payout
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Event meta -->
+    <div class="card">
+      <div class="card-header"><i class="bi bi-info-circle me-2"></i>Details</div>
+      <div class="card-body" style="font-size:.84rem;">
+        <div class="mb-2">
+          <div class="text-muted" style="font-size:.73rem;">Edir</div>
+          <div>{{ event.edir.name }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="text-muted" style="font-size:.73rem;">Reported</div>
+          <div>{{ event.created_at|date:"M j, Y H:i" }}</div>
+        </div>
+        {% if event.notes %}
+        <div>
+          <div class="text-muted" style="font-size:.73rem;">Notes</div>
+          <div>{{ event.notes }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

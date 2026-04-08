@@ -1,0 +1,25 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}{{ action }}{% endblock %}
+{% block page_title %}{{ action }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-9">
+    <div class="card">
+      <div class="card-header" style="border-left:4px solid var(--edir-red);">
+        <i class="bi bi-heart-pulse me-2 text-danger"></i>{{ action }}
+      </div>
+      <div class="card-body">
+        <div class="alert alert-warning mb-4" style="font-size:.85rem;">
+          <i class="bi bi-info-circle me-2"></i>
+          Please ensure you have verified the event before reporting. All reports are subject to committee review.
+        </div>
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {% crispy form %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

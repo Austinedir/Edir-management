@@ -1,0 +1,77 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+
+{% block title %}Contributions{% endblock %}
+{% block page_title %}Contributions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;margin:0;">Contribution Periods</h2>
+    <p class="text-muted mb-0" style="font-size:.85rem;">Monthly collection records</p>
+  </div>
+  <a href="{% url 'contributions:period_create' %}" class="btn btn-edir-primary">
+    <i class="bi bi-plus-circle me-1"></i> New Period
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table edir-table mb-0">
+      <thead>
+        <tr>
+          <th>Period</th>
+          <th>Due Date</th>
+          <th>Amount/Member</th>
+          <th>Paid</th>
+          <th>Total Collected</th>
+          <th>Collection Rate</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for period in periods %}
+        <tr>
+          <td class="fw-600">{{ period }}</td>
+          <td style="font-size:.85rem;">{{ period.due_date }}</td>
+          <td>{{ period.amount|floatformat:0|intcomma }} ETB</td>
+          <td>{{ period.paid_count }}</td>
+          <td>{{ period.total_collected|default:0|floatformat:0|intcomma }} ETB</td>
+          <td>
+            {% with rate=period.get_collection_rate %}
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <div class="collection-bar" style="width:80px;">
+                <div class="collection-fill" style="width:{{ rate }}%"></div>
+              </div>
+              <span style="font-size:.8rem;font-weight:600;">{{ rate|floatformat:0 }}%</span>
+            </div>
+            {% endwith %}
+          </td>
+          <td>
+            {% if period.is_closed %}
+            <span class="status-badge badge-closed">Closed</span>
+            {% else %}
+            <span class="status-badge badge-active">Open</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{% url 'contributions:period_detail' period.pk %}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-eye"></i>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center text-muted py-5">
+            <i class="bi bi-calendar-x" style="font-size:2rem;opacity:.2;display:block;margin-bottom:.5rem;"></i>
+            No contribution periods yet.
+            <a href="{% url 'contributions:period_create' %}">Create the first one</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

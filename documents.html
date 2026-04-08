@@ -1,0 +1,45 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+{% block title %}Special Levies{% endblock %}
+{% block page_title %}Special Levies{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;margin:0;">Special Levies</h2>
+    <p class="text-muted mb-0" style="font-size:.85rem;">One-off collections for specific events or needs</p>
+  </div>
+  <a href="{% url 'contributions:levy_create' %}" class="btn btn-edir-gold">
+    <i class="bi bi-plus-circle me-1"></i> New Levy
+  </a>
+</div>
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table edir-table mb-0">
+      <thead>
+        <tr><th>Title</th><th>Reason</th><th>Per Member</th><th>Due Date</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for levy in levies %}
+        <tr>
+          <td class="fw-600">{{ levy.title }}</td>
+          <td style="font-size:.83rem;">{{ levy.reason|truncatechars:60 }}</td>
+          <td>{{ levy.amount_per_member|floatformat:0|intcomma }} ETB</td>
+          <td style="font-size:.83rem;">{{ levy.due_date }}</td>
+          <td>
+            {% if levy.is_active %}
+            <span class="status-badge badge-active">Active</span>
+            {% else %}
+            <span class="status-badge badge-closed">Closed</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center text-muted py-5" style="font-size:.85rem;">No special levies</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base/base.html" %}
+{% block title %}Reply – {{ original.subject }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:680px;">
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="/admin-portal/messages/" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <h5 class="mb-0" style="font-family:'Playfair Display',serif;">Reply to Message</h5>
+  </div>
+
+  <!-- Original message -->
+  <div class="card border-0 shadow-sm mb-3" style="background:#f8fbf9;">
+    <div class="card-body py-3">
+      <div class="fw-600 mb-1" style="font-size:.85rem;color:#666;">ORIGINAL MESSAGE</div>
+      <div class="fw-600">{{ original.subject }}</div>
+      <div class="text-muted small mb-2">
+        From: {{ original.sender.get_full_name|default:original.sender.username }}
+        · {{ original.created_at|date:"M d, Y g:i A" }}
+      </div>
+      <div style="white-space:pre-line;font-size:.88rem;color:#444;">{{ original.body }}</div>
+    </div>
+  </div>
+
+  <!-- Reply form -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <div class="fw-600 mb-3">Re: {{ original.subject }}</div>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <textarea name="body" class="form-control" rows="6" required
+            placeholder="Write your reply here..."></textarea>
+        </div>
+        <div class="d-flex gap-3">
+          <button type="submit" class="btn flex-grow-1" style="background:var(--edir-green);color:#fff;">
+            <i class="bi bi-reply me-2"></i>Send Reply
+          </button>
+          <a href="/admin-portal/messages/" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
